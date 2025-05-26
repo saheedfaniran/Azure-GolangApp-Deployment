@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: my-golang-app
-        image: saheedfaniran/go-app-develop:latest
+        image: saheedfaniran/azure-golangapp-deployment
         imagePullPolicy: Always
         ports:
         - containerPort: 1337
