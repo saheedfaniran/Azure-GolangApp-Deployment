@@ -1,4 +1,4 @@
-# Azure Golang App Deployment with Azure DevOps
+# Azure Golang App Deployment
 
 This guide explains how to build, containerize, and deploy a Golang web application to Azure Kubernetes Service (AKS) using Azure DevOps for CI/CD, Azure Container Registry (ACR), and Terraform for infrastructure provisioning.
 
