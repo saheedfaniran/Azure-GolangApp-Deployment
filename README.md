@@ -6,15 +6,15 @@ This guide explains how to build, containerize, and deploy a Golang web applicat
 
 ## 📦 Prerequisites
 
-Ensure you have the following:
+Ensure the following tools are installed:
 
-- Azure Subscription
-- Azure DevOps organization and project
-- Azure CLI
-- Docker
-- Terraform
-- kubectl
-- Go (v1.18+)
+- [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)
+- [Terraform](https://developer.hashicorp.com/terraform/downloads)
+- [Docker](https://www.docker.com/get-started)
+- [kubectl](https://kubernetes.io/docs/tasks/tools/)
+- [Go (v1.18+)](https://go.dev/doc/install)
+- GitHub account and repository (for CI/CD)
+- Get Terraform extension from Azure DevOps market place
 
 ---
 
@@ -27,7 +27,33 @@ cd Azure-GolangApp-Deployment
 
 ---
 
-## 🐳 Step 2: Build and Push Docker Image to ACR
+## 🐳 Step 2: Provision Infrastructure with Terraform either on Azure CLI or using Azure Pipeline
+
+### Initialize, check plan and Apply Terraform
+
+```bash
+cd terraform
+terraform init
+terraform plan
+terraform apply
+```
+          OR
+Create an Azure pipeline with jobs to install terraform, install Kubectl, terraform init, terraform plan and terraform apply
+This sets up AKS, ACR, and networking resources.
+
+---
+
+## ☁️ Step 3: Grant ACR Pull Access to AKS
+
+```bash
+az role assignment create   --assignee <AKS_MANAGED_IDENTITY_ID>   --role "AcrPull"   --scope $(az acr show --name saheedacr110525 --resource-group aks_tf_rg --query id --output tsv)
+```
+
+Replace `<AKS_MANAGED_IDENTITY_ID>` with the client or object ID of the AKS managed identity.
+
+---
+
+## 🔐 Step 4: Build and Push Docker Image to ACR
 
 ### Authenticate to ACR
 
@@ -49,30 +75,6 @@ docker push saheedacr110525.azurecr.io/saheedfaniran/azure-golangapp-deployment:
 
 ---
 
-## ☁️ Step 3: Provision Infrastructure with Terraform
-
-### Initialize and Apply Terraform
-
-```bash
-cd terraform
-terraform init
-terraform apply
-```
-
-This sets up AKS, ACR, and networking resources.
-
----
-
-## 🔐 Step 4: Grant ACR Pull Access to AKS
-
-```bash
-az role assignment create   --assignee <AKS_MANAGED_IDENTITY_ID>   --role "AcrPull"   --scope $(az acr show --name saheedacr110525 --resource-group aks_tf_rg --query id --output tsv)
-```
-
-Replace `<AKS_MANAGED_IDENTITY_ID>` with the client or object ID of the AKS managed identity.
-
----
-
 ## 🚀 Step 5: Set Up Azure DevOps Pipeline
 
 ### Create a Pipeline
@@ -80,7 +82,7 @@ Replace `<AKS_MANAGED_IDENTITY_ID>` with the client or object ID of the AKS mana
 1. Navigate to your Azure DevOps project.
 2. Go to **Pipelines > Create Pipeline**.
 3. Select your repository (e.g., GitHub or Azure Repos).
-4. Use the classic editor or YAML and add the following steps:
+4. Use the classic editor to create the tasks or YAML and add the following steps:
 
 ```yaml
 trigger:
@@ -125,8 +127,10 @@ steps:
 Replace placeholders like `<AzureContainerRegistryServiceConnection>` and `<AzureSubscriptionServiceConnection>` with actual service connections defined in Azure DevOps.
 
 ---
+## 📡 Step 6: Setup Azure DevOps release pipeline
+You can seperate the build from the deployment by creating a release pipeline for Deployment into Kubernetes instead of joining into the same Azure pipeline for Docker build & Push to ACR
 
-## 📡 Step 6: Access the Application
+## 📡 Step 7: Access the Application
 
 After deployment, fetch the external IP:
 
@@ -144,12 +148,6 @@ Access the app at `http://<external-ip>:1337`
 |--------|--------------|---------------------|
 | GET    | `/hello`     | Hello world message |
 | GET    | `/greetings` | Custom greetings    |
-
----
-
-## 📄 License
-
-MIT
 
 ---
 
